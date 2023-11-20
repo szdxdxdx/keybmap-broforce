@@ -53,7 +53,7 @@ int key_status[256] = { 0 };
                                                             send_event_to_keys(key_event_down_to_up, dst_keys);     \
                                                         }
 
-#if 1
+#if 0
 
 void main(void) /* 宏函数介绍 */
 {
