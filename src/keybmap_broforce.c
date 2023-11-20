@@ -4,13 +4,15 @@
 
 int key_status[256] = { 0 };
 
-
+/* util strcat */
 #define strcat1(x, y)                                   x ## y
 #define strcat2(x, y)                                   strcat1(x, y)
 
+/* util timer */
 #define static_timer(time_interval)                     static time_t strcat2(timer, __LINE__) = 0; \
                                                         if ((strcat2(timer, __LINE__) + time_interval <= clock()) ? (strcat2(timer, __LINE__) = clock()) : 0)
 
+/* update_key_status */
 #define update_key_status_0(key)                        key_status[key] = (((key_status[key] << 1) | !!GetAsyncKeyState(key))) & 0b011;
 #define update_key_status_1(key)                        update_key_status_0(key) update_key_status_2
 #define update_key_status_1_end
@@ -18,12 +20,14 @@ int key_status[256] = { 0 };
 #define update_key_status_2_end
 #define update_key_status(keys)                         strcat2(update_key_status_1 keys, _end)
 
+/* get_key_status */
 #define get_key_status(key)                             (key_status[key])
 #define is_key_up_to_down(key)                          (get_key_status(key) == 0b001)
 #define is_key_down_to_up(key)                          (get_key_status(key) == 0b010)
 #define is_key_up(key)                                  ( ! get_key_status(key))
 #define is_key_down(key)                                get_key_status(key)
 
+/* send_event_to_key */
 #define key_event_up_to_down                            0
 #define key_event_down_to_up                            KEYEVENTF_KEYUP
 #define send_event_to_key_0(key_event, key)             keybd_event(key, 0, key_event, 0);
@@ -53,16 +57,18 @@ int key_status[256] = { 0 };
                                                             send_event_to_keys(key_event_down_to_up, dst_keys);     \
                                                         }
 
-#if 0
+#if 1
 
-void main(void) /* 宏函数介绍 */
+/* 宏函数介绍 
+   Introduction to macro functions */
+void main(void)
 {
     for (;;)
     {
-        /* 监听A、B、C、D、E键的状态 */
-        update_key_status(('A')('B')('C')('D')('E'));
+        /* 监听A、B、C、D、E键的状态
+           update the status of A, B, C, D, E keys in for loop */
+        update_key_status( ('A')('B')('C')('D')('E') );
 
-        /* 判断A键的状态 */
         if (is_key_up_to_down('A')) {
             puts("key_up_to_down: A");
         }
@@ -70,7 +76,8 @@ void main(void) /* 宏函数介绍 */
             puts("key_down_to_up: A");
         }
 
-        /* 按下B键的同时，模拟按下 ctrl + V */
+        /* 按下B键的同时，模拟按下 ctrl + V
+           While pressing the B key, simulate pressing ctrl + V */
         if (is_key_up_to_down('B'))
         {
             send_event_to_key(
@@ -81,16 +88,22 @@ void main(void) /* 宏函数介绍 */
             );
         }
         
-        /* 按下C键的同时，模拟按下ctrl + V */
+        /* 按下C键的同时，模拟按下ctrl + V
+           While pressing the C key, simulate pressing ctrl + V */
         if (is_key_down_to_up('C')) {
             send_event_to_keys(key_event_up_to_down, (VK_CONTROL)('V'));
             send_event_to_keys(key_event_down_to_up, ('V')(VK_CONTROL));
         }
 
-        /* 将D键的状态（按下和松开两个瞬间态）同步到X、Y、Z键 */
+        /* 将D键的状态（按下和松开两个瞬间态）同步到X、Y、Z键
+           Synchronize the state of the D key (two instantaneous states of
+           pressing and releasing) to the X, Y, and Z keys
+        */
         sync_key_status('D', ('X')('Y')('Z'));
         
-        /* 按住E键时，每500毫秒和每1000毫秒各做一次输出 */
+        /* 按住E键时，每500毫秒和每1000毫秒各做一次输出
+           When pressing the E key, output will be made
+           every 500 milliseconds and every 1000 milliseconds */
         if (is_key_down('E'))
         {
             static_timer(500) {
@@ -105,6 +118,8 @@ void main(void) /* 宏函数介绍 */
 }
 
 #else
+
+/* keybmap_broforce */
 
 int main(void)
 {
