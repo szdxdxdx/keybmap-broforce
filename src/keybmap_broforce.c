@@ -57,7 +57,7 @@ int key_status[256] = { 0 };
                                                             send_event_to_keys(key_event_down_to_up, dst_keys);     \
                                                         }
 
-#if 1
+#if 0
 
 /* 宏函数介绍 
    Introduction to macro functions */
@@ -152,7 +152,6 @@ int main(void)
         " | V          | pose                                   | \n"
         " | VK_SPACE   | change shooting_mode                   | \n"
         " | VK_UP      | change quick_shooting_time_interval    | \n"
-        " | VK_ESCAPE  | quit                                   | \n"
         " +------------+----------------------------------------+ "
     );
     
@@ -162,7 +161,7 @@ int main(void)
         update_key_status(
             (VK_NUMPAD8)(VK_NUMPAD4)(VK_NUMPAD5)(VK_NUMPAD6)
             ('Z')('X')('C')('V')
-            (VK_SPACE)(VK_ESCAPE)(VK_UP)
+            (VK_SPACE)(VK_UP)
         );
 
         sync_key_status(VK_NUMPAD8, ('W')('I')('1'));
@@ -195,10 +194,6 @@ int main(void)
         }
         }
 
-        if (is_key_up_to_down(VK_ESCAPE)) {
-            break;
-        }
-
         if (is_key_up_to_down(VK_SPACE)) {
             switch (shooting_mode)
             {
@@ -217,8 +212,8 @@ int main(void)
 
         if (is_key_up_to_down(VK_UP)) {
             quick_shooting_time_interval += 2;
-            if (quick_shooting_time_interval > 80) {
-                quick_shooting_time_interval = 40;
+            if (quick_shooting_time_interval > 70) {
+                quick_shooting_time_interval = 30;
             }
             printf("quick_shooting_time_interval = %d\n", quick_shooting_time_interval);
         }
