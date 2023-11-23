@@ -121,47 +121,106 @@ void main(void)
 
 /* keybmap_broforce */
 
-int main(void)
+static struct {
+    enum { normal, quick } shooting_mode;
+    time_t quick_shooting_time_interval;
+} status =
+{
+    .shooting_mode = quick,
+    .quick_shooting_time_interval = 40,
+};
+
+#define print_shooting_mode(shooting_mode)              \
+        puts("shooting_mode = " #shooting_mode)
+
+#define print_status()                                  \
+{                                                       \
+    switch (status.shooting_mode)                       \
+    {                                                   \
+    case normal: {                                      \
+        print_shooting_mode(normal);                    \
+        break;                                          \
+    }                                                   \
+    case quick: {                                       \
+        print_shooting_mode(quick);                     \
+        break;                                          \
+    }                                                   \
+    }                                                   \
+    printf("quick_shooting_time_interval = %lld\n",     \
+        status.quick_shooting_time_interval             \
+    );                                                  \
+}
+
+#define change_shooting_mode()                          \
+{                                                       \
+    switch (status.shooting_mode)                       \
+    {                                                   \
+    case normal: {                                      \
+        status.shooting_mode = quick;                   \
+        print_shooting_mode(quick);                     \
+        break;                                          \
+    }                                                   \
+    case quick: {                                       \
+        status.shooting_mode = normal;                  \
+        print_shooting_mode(normal);                    \
+        break;                                          \
+    }                                                   \
+    }                                                   \
+}
+
+#define add_quick_shooting_time_interval()              \
+{                                                       \
+    status.quick_shooting_time_interval += 2;           \
+                                                        \
+    if (status.quick_shooting_time_interval >= 70) {    \
+        status.quick_shooting_time_interval = 30;       \
+    }                                                   \
+    printf("quick_shooting_time_interval = %lld\n",     \
+        status.quick_shooting_time_interval             \
+    );                                                  \
+}
+
+#define sub_quick_shooting_time_interval()              \
+{                                                       \
+    status.quick_shooting_time_interval -= 2;           \
+                                                        \
+    if (status.quick_shooting_time_interval <= 30) {    \
+        status.quick_shooting_time_interval = 70;       \
+    }                                                   \
+    printf("quick_shooting_time_interval = %lld\n",     \
+        status.quick_shooting_time_interval             \
+    );                                                  \
+}
+
+void three_player3(void)
 {
     puts(
-        "  keybmap_broforce, version: " __DATE__ " " __TIME__    "\n"
-        "                                                         \n"
-        " +----------------[ game key settings ]----------------+ \n"
-        " | controll | player1      player2   player3   player4 | \n"
-        " +----------+------------+---------+---------+---------+ \n"
-        " | up       | VK_NUMPAD8   W         I         1       | \n"
-        " | left     | VK_NUMPAD4   A         J         2       | \n"
-        " | down     | VK_NUMPAD5   S         K         3       | \n"
-        " | right    | VK_NUMPAD6   D         L         4       | \n"
-        " | shoot    | G            E         Y         8       | \n"
-        " | skill    | X            R         U         5       | \n"
-        " | melee    | C            T         O         6       | \n"
-        " | pose     | V            Q         P         7       | \n"
-        " +----------+------------+---------+---------+---------+ \n"
-        "                                                         \n"
-        " +-------------------[ keybmap ]-----------------------+ \n"
-        " | key        |   controll                             | \n"
-        " +------------+----------------------------------------+ \n"
-        " | VK_NUMPAD8 | up                                     | \n"
-        " | VK_NUMPAD4 | left                                   | \n"
-        " | VK_NUMPAD5 | down                                   | \n"
-        " | VK_NUMPAD6 | right                                  | \n"
-        " | G          | shoot                                  | \n"
-        " | X          | skill                                  | \n"
-        " | C          | melee                                  | \n"
-        " | V          | pose                                   | \n"
-        " | VK_SPACE   | change shooting_mode                   | \n"
-        " | VK_UP      | change quick_shooting_time_interval    | \n"
-        " +------------+----------------------------------------+ "
+        " +---------------------------[3 players]---------------------------+\n"
+        " |           |                                                     |\n"
+        " |           |       - - --+------------[game setting]-------------+\n"
+        " | ctrl      | description | player1 | player2 | player3 | player4 |\n"
+        " +-----------+-------------+---------+---------+---------+---------+\n"
+        " | numpad8   | up          | numpad8 | W       | I       | 1       |\n"
+        " | numpad4   | left        | numpad4 | A       | J       | 2       |\n"
+        " | numpad5   | down        | numpad5 | S       | K       | 3       |\n"
+        " | numpad6   | right       | numpad6 | D       | L       | 4       |\n"
+        " | Z         | shoot       | G       | E       | Y       | 8       |\n"
+        " | X         | skill       | X       | R       | U       | 5       |\n"
+        " | C         | melee       | C       | T       | O       | 6       |\n"
+        " | V         | pose        | V       | Q       | P       | 7       |\n"
+        " |           |       - - --+---------+---------+---------+---------+\n"
+        " | SPACE     | change shooting_mode                                |\n"
+        " | UP        | change quick_shooting_time_interval                 |\n"
+        " | SPACE + X | select keybmap mode                                 |\n"
+        " +-----------+-----------------------------------------------------+"
     );
-    
+    print_status();
 
     for (;;)
     {
-        update_key_status(
-            (VK_NUMPAD8)(VK_NUMPAD4)(VK_NUMPAD5)(VK_NUMPAD6)
-            ('Z')('X')('C')('V')
-            (VK_SPACE)(VK_UP)
+         update_key_status(
+            (VK_NUMPAD8)(VK_NUMPAD4)(VK_NUMPAD5)(VK_NUMPAD6)('Z')('X')('C')('V')
+            (VK_SPACE)(VK_UP)(VK_DOWN)
         );
 
         sync_key_status(VK_NUMPAD8, ('W')('I')('1'));
@@ -172,9 +231,7 @@ int main(void)
         sync_key_status('C',        ('T')('O')('6'));
         sync_key_status('V',        ('Q')('P')('7'));
 
-        static enum { normal, quick } shooting_mode = normal;
-        static int quick_shooting_time_interval = 50;
-        switch (shooting_mode)
+        switch (status.shooting_mode)
         {
         case normal:
         {
@@ -185,7 +242,7 @@ int main(void)
         {
             if (is_key_down('Z'))
             {
-                static_timer(quick_shooting_time_interval) {
+                static_timer(status.quick_shooting_time_interval) {
                     send_event_to_keys(key_event_up_to_down, ('G')('Y')('E')('8'));
                     send_event_to_keys(key_event_down_to_up, ('G')('Y')('E')('8'));
                 }
@@ -195,27 +252,147 @@ int main(void)
         }
 
         if (is_key_up_to_down(VK_SPACE)) {
-            switch (shooting_mode)
-            {
-            case normal: {
-                shooting_mode = quick;
-                puts("shooting_mode = quick");
-                break;
-            }
-            case quick: {
-                shooting_mode = normal;
-                puts("shooting_mode = normal");
-                break;
-            }
-            }
+            change_shooting_mode();
         }
 
         if (is_key_up_to_down(VK_UP)) {
-            quick_shooting_time_interval += 2;
-            if (quick_shooting_time_interval > 70) {
-                quick_shooting_time_interval = 30;
+            add_quick_shooting_time_interval();
+        }
+        else if (is_key_up_to_down(VK_DOWN)) {
+            sub_quick_shooting_time_interval();
+        }
+
+        if (is_key_down(VK_SPACE) && is_key_up_to_down('X')) {
+            break;
+        }
+    }
+
+    return;
+}
+
+void one_player(void)
+{
+    puts(
+        " +--------------------[1 player]-------------------+\n"
+        " | ctrl      | description | game setting          |\n"
+        " +-----------+-------------+-----------------------+\n"
+        " | numpad8   | up          | numpad8               |\n"
+        " | numpad4   | left        | numpad4               |\n"
+        " | numpad5   | down        | numpad5               |\n"
+        " | numpad6   | right       | numpad6               |\n"
+        " | Z         | shoot       | G                     |\n"
+        " | X         | skill       | X                     |\n"
+        " | C         | melee       | C                     |\n"
+        " | V         | pose        | V                     |\n"
+        " |           |       - - --+-----------------------+\n"
+        " | SPACE     | change shooting_mode                |\n"
+        " | UP        | change quick_shooting_time_interval |\n"
+        " | DOWN      | change quick_shooting_time_interval |\n"
+        " | SPACE + X | select keybmap mode                 |\n"
+        " +-----------+-------------------------------------+"
+    );
+    print_status();
+
+    for (;;)
+    {
+        update_key_status(('Z')('X')(VK_SPACE)(VK_UP)(VK_DOWN));
+
+        switch (status.shooting_mode)
+        {
+        case normal:
+        {
+            sync_key_status('Z', ('G'));
+            break;
+        }
+        case quick:
+        {
+            if (is_key_down('Z'))
+            {
+                static_timer(status.quick_shooting_time_interval)
+                {
+                    send_event_to_key(
+                        (key_event_up_to_down, 'G')
+                        (key_event_down_to_up, 'G')
+                    );
+                }
             }
-            printf("quick_shooting_time_interval = %d\n", quick_shooting_time_interval);
+            break;
+        }
+        }
+
+        if (is_key_up_to_down(VK_SPACE)) {
+            change_shooting_mode();
+        }
+
+        if (is_key_up_to_down(VK_UP)) {
+            add_quick_shooting_time_interval();
+        }
+        else if (is_key_up_to_down(VK_DOWN)) {
+            sub_quick_shooting_time_interval();
+        }
+
+        if (is_key_down(VK_SPACE) && is_key_up_to_down('X')) {
+            break;
+        }
+    }
+
+    return;
+}
+
+int main(void)
+{
+    puts("\n keybmap broforce, version: " __DATE__ " " __TIME__ "\n");
+
+    struct {
+        const char *name;
+        void (*func)(void);
+    } mode[] =
+    {
+        {
+            .name = "3 players",
+            .func = three_player3
+        }, {
+            .name = "1 player",
+            .func = one_player
+        },
+    };
+    size_t idx = 0;
+    size_t size = ARRAYSIZE(mode);
+
+loop:
+    puts(
+        " +--------[ select keybmap mode]--------+ \n"
+        " | ctrl      | description              | \n"
+        " +-----------+--------------------------+ \n"
+        " | UP        | switch keybmod mode      | \n"
+        " | DOWN      | switch keybmod mode      | \n"
+        " | Z         | select this mode         | \n"
+        " | SPACE + X | exit                     | \n"
+        " +-----------+--------------------------+"
+    );
+    printf("mode = %s\n", mode[idx].name);
+
+    for (;;)
+    {
+        update_key_status((VK_UP)(VK_DOWN)('Z')('X')(VK_SPACE));
+
+        if (is_key_up_to_down(VK_UP))
+        {
+            idx = (idx + 1) % size;
+            printf("mode = %s\n", mode[idx].name);
+        }
+        else if (is_key_up_to_down(VK_DOWN)) {
+            idx = (idx - 1) % size;
+            printf("mode = %s\n", mode[idx].name);
+        }
+        else if (is_key_up_to_down('Z'))
+        {
+            mode[idx].func();
+            goto loop;
+        }
+        else if (is_key_down(VK_SPACE) && is_key_up_to_down('X'))
+        {
+            break;
         }
     }
 
