@@ -12,24 +12,6 @@ int key_status[256] = { 0 };
 #define static_timer(time_interval)                     static time_t strcat2(timer, __LINE__) = 0; \
                                                         if ((strcat2(timer, __LINE__) + time_interval <= clock()) ? (strcat2(timer, __LINE__) = clock()) : 0)
 
-/* util enum val with str name */
-#define enum_str_0(e)                                   #e,
-#define enum_str_1(e)                                   enum_str_0(e) enum_str_2
-#define enum_str_1_end
-#define enum_str_2(e)                                   enum_str_0(e) enum_str_1
-#define enum_str_2_end
-#define enum_str(enums)                                 strcat2(enum_str_1 enums, _end)
-
-#define enum_val_0(e)                                   e,
-#define enum_val_1(e)                                   enum_val_0(e) enum_val_2
-#define enum_val_1_end
-#define enum_val_2(e)                                   enum_val_0(e) enum_val_1
-#define enum_val_2_end
-#define enum_val(enums)                                 strcat2(enum_val_1 enums, _end)
-
-#define enum_to_str(enum_name, e)                       enum_name##_str[e]
-#define def_enum_with_str_name(enum_name, enums)        typedef enum { enum_val(enums) } enum_name; const char *enum_name##_str[] = { enum_str(enums) };
-
 /* update_key_status */
 #define update_key_status_0(key)                        key_status[key] = (((key_status[key] << 1) | !!GetAsyncKeyState(key))) & 0b011;
 #define update_key_status_1(key)                        update_key_status_0(key) update_key_status_2
@@ -81,6 +63,28 @@ int key_status[256] = { 0 };
    Introduction to macro functions */
 void main(void)
 {
+
+#if 0
+    /* msvc能用，gcc不能，核心问题是逗号
+       msvc works, but gcc cannot */
+
+#define enum_str_0(e)                                   #e,
+#define enum_str_1(e)                                   enum_str_0(e) enum_str_2
+#define enum_str_1_end
+#define enum_str_2(e)                                   enum_str_0(e) enum_str_1
+#define enum_str_2_end
+#define enum_str(enums)                                 strcat2(enum_str_1 enums, _end)
+
+#define enum_val_0(e)                                   e,
+#define enum_val_1(e)                                   enum_val_0(e) enum_val_2
+#define enum_val_1_end
+#define enum_val_2(e)                                   enum_val_0(e) enum_val_1
+#define enum_val_2_end
+#define enum_val(enums)                                 strcat2(enum_val_1 enums, _end)
+
+#define enum_to_str(enum_name, e)                       enum_name##_str[e]
+#define def_enum_with_str_name(enum_name, enums)        typedef enum { enum_val(enums) } enum_name; const char *enum_name##_str[] = { enum_str(enums) };
+
     /* 声明枚举和对应的字符串列表（要求枚举只能从零开始自增，不能自定义枚举的值）
        Declare enums and corresponding string array (cannot customize the values of enums) */
     def_enum_with_str_name(number, (zero)(one)(two)(three));
@@ -88,6 +92,7 @@ void main(void)
     printf("%s = %d\n", enum_to_str(number, one), one);
     printf("%s = %d\n", enum_to_str(number, two), two);
     printf("%s = %d\n", enum_to_str(number, three), three);
+#endif
 
     for (;;)
     {
@@ -171,12 +176,12 @@ void four_players(void)
         " +-----------+-----------------------------------------------------+"
     );
 
-    def_enum_with_str_name(enum_shooting_mode, (normal)(quick));
-    static enum_shooting_mode shooting_mode = normal;
+    static enum {normal, quick} shooting_mode = normal;
+    const char *shooting_mode_str[] = { "normal", "quick"};
 
     static time_t quick_shooting_time_interval = 30;
 
-    printf("shooting_mode = %s\n", enum_to_str(enum_shooting_mode, normal));
+    printf("shooting_mode = %s\n", shooting_mode_str[shooting_mode]);
     printf("quick_shooting_time_interval = %lld\n",
         quick_shooting_time_interval
     );
@@ -219,7 +224,7 @@ void four_players(void)
         if (is_key_up_to_down(VK_SPACE))
         {
             shooting_mode = (normal == shooting_mode) ? quick : normal;
-            printf("shooting_mode = %s\n", enum_to_str(enum_shooting_mode, shooting_mode));
+            printf("shooting_mode = %s\n", shooting_mode_str[shooting_mode]);
         }
         else if (is_key_up_to_down(VK_UP))
         {
@@ -271,12 +276,12 @@ void one_player(void)
         " +-----------+-------------------------------------+"
     );
 
-    def_enum_with_str_name(enum_shooting_mode, (normal)(quick));
-    enum_shooting_mode shooting_mode = normal;
+    static enum {normal, quick} shooting_mode = normal;
+    const char *shooting_mode_str[] = { "normal", "quick"};
 
-    time_t quick_shooting_time_interval = 30;
+    static time_t quick_shooting_time_interval = 30;
 
-    printf("shooting_mode = %s\n", enum_to_str(enum_shooting_mode, normal));
+    printf("shooting_mode = %s\n", shooting_mode_str[shooting_mode]);
     printf("quick_shooting_time_interval = %lld\n",
         quick_shooting_time_interval
     );
@@ -311,7 +316,7 @@ void one_player(void)
         if (is_key_up_to_down(VK_SPACE))
         {
             shooting_mode = (normal == shooting_mode) ? quick : normal;
-            printf("shooting_mode = %s\n", enum_to_str(enum_shooting_mode, shooting_mode));
+            printf("shooting_mode = %s\n", shooting_mode_str[shooting_mode]);
         }
         else if (is_key_up_to_down(VK_UP))
         {
