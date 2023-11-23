@@ -55,7 +55,7 @@ int key_status[256] = { 0 };
                                                             send_event_to_keys(key_event_up_to_down, dst_keys);     \
                                                         } else if (is_key_down_to_up(src_key)) {                    \
                                                             send_event_to_keys(key_event_down_to_up, dst_keys);     \
-                                                        }
+                                                        }                                                           \
 
 #if 0
 
@@ -66,7 +66,7 @@ void main(void)
     for (;;)
     {
         /* 监听A、B、C、D、E键的状态
-           update the status of A, B, C, D, E keys in for loop */
+           update the status of A, B, C, D, E keys in loop */
         update_key_status( ('A')('B')('C')('D')('E') );
 
         if (is_key_up_to_down('A')) {
@@ -121,21 +121,15 @@ void main(void)
 
 /* keybmap_broforce */
 
-static struct {
-    enum { normal, quick } shooting_mode;
-    time_t quick_shooting_time_interval;
-} status =
-{
-    .shooting_mode = quick,
-    .quick_shooting_time_interval = 40,
-};
+static enum { normal, quick } shooting_mode = quick;
+static time_t quick_shooting_time_interval = 40;
 
 #define print_shooting_mode(shooting_mode)              \
-        puts("shooting_mode = " #shooting_mode)
+        puts("shooting_mode = " #shooting_mode)         \
 
 #define print_status()                                  \
 {                                                       \
-    switch (status.shooting_mode)                       \
+    switch (shooting_mode)                              \
     {                                                   \
     case normal: {                                      \
         print_shooting_mode(normal);                    \
@@ -147,58 +141,58 @@ static struct {
     }                                                   \
     }                                                   \
     printf("quick_shooting_time_interval = %lld\n",     \
-        status.quick_shooting_time_interval             \
+        quick_shooting_time_interval                    \
     );                                                  \
-}
+}                                                       \
 
 #define change_shooting_mode()                          \
 {                                                       \
-    switch (status.shooting_mode)                       \
+    switch (shooting_mode)                              \
     {                                                   \
     case normal: {                                      \
-        status.shooting_mode = quick;                   \
+        shooting_mode = quick;                          \
         print_shooting_mode(quick);                     \
         break;                                          \
     }                                                   \
     case quick: {                                       \
-        status.shooting_mode = normal;                  \
+        shooting_mode = normal;                         \
         print_shooting_mode(normal);                    \
         break;                                          \
     }                                                   \
     }                                                   \
-}
+}                                                       \
 
 #define add_quick_shooting_time_interval()              \
 {                                                       \
-    status.quick_shooting_time_interval += 2;           \
+    quick_shooting_time_interval += 2;                  \
                                                         \
-    if (status.quick_shooting_time_interval >= 70) {    \
-        status.quick_shooting_time_interval = 30;       \
+    if (quick_shooting_time_interval >= 70) {           \
+        quick_shooting_time_interval = 30;              \
     }                                                   \
     printf("quick_shooting_time_interval = %lld\n",     \
-        status.quick_shooting_time_interval             \
+        quick_shooting_time_interval                    \
     );                                                  \
-}
+}                                                       \
 
 #define sub_quick_shooting_time_interval()              \
 {                                                       \
-    status.quick_shooting_time_interval -= 2;           \
+    quick_shooting_time_interval -= 2;                  \
                                                         \
-    if (status.quick_shooting_time_interval <= 30) {    \
-        status.quick_shooting_time_interval = 70;       \
+    if (quick_shooting_time_interval <= 30) {           \
+        quick_shooting_time_interval = 70;              \
     }                                                   \
     printf("quick_shooting_time_interval = %lld\n",     \
-        status.quick_shooting_time_interval             \
+        quick_shooting_time_interval                    \
     );                                                  \
-}
+}                                                       \
 
-void three_player3(void)
+void four_players(void)
 {
     puts(
-        " +---------------------------[3 players]---------------------------+\n"
+        " +---------------------------[4 players]---------------------------+\n"
         " |           |                                                     |\n"
         " |           |       - - --+------------[game setting]-------------+\n"
-        " | ctrl      | description | player1 | player2 | player3 | player4 |\n"
+        " | key       | description | player1 | player2 | player3 | player4 |\n"
         " +-----------+-------------+---------+---------+---------+---------+\n"
         " | numpad8   | up          | numpad8 | W       | I       | 1       |\n"
         " | numpad4   | left        | numpad4 | A       | J       | 2       |\n"
@@ -218,7 +212,7 @@ void three_player3(void)
 
     for (;;)
     {
-         update_key_status(
+        update_key_status(
             (VK_NUMPAD8)(VK_NUMPAD4)(VK_NUMPAD5)(VK_NUMPAD6)('Z')('X')('C')('V')
             (VK_SPACE)(VK_UP)(VK_DOWN)
         );
@@ -231,7 +225,7 @@ void three_player3(void)
         sync_key_status('C',        ('T')('O')('6'));
         sync_key_status('V',        ('Q')('P')('7'));
 
-        switch (status.shooting_mode)
+        switch (shooting_mode)
         {
         case normal:
         {
@@ -242,7 +236,7 @@ void three_player3(void)
         {
             if (is_key_down('Z'))
             {
-                static_timer(status.quick_shooting_time_interval) {
+                static_timer(quick_shooting_time_interval) {
                     send_event_to_keys(key_event_up_to_down, ('G')('Y')('E')('8'));
                     send_event_to_keys(key_event_down_to_up, ('G')('Y')('E')('8'));
                 }
@@ -254,8 +248,7 @@ void three_player3(void)
         if (is_key_up_to_down(VK_SPACE)) {
             change_shooting_mode();
         }
-
-        if (is_key_up_to_down(VK_UP)) {
+        else if (is_key_up_to_down(VK_UP)) {
             add_quick_shooting_time_interval();
         }
         else if (is_key_up_to_down(VK_DOWN)) {
@@ -274,7 +267,7 @@ void one_player(void)
 {
     puts(
         " +--------------------[1 player]-------------------+\n"
-        " | ctrl      | description | game setting          |\n"
+        " | key       | description | game setting          |\n"
         " +-----------+-------------+-----------------------+\n"
         " | numpad8   | up          | numpad8               |\n"
         " | numpad4   | left        | numpad4               |\n"
@@ -297,7 +290,7 @@ void one_player(void)
     {
         update_key_status(('Z')('X')(VK_SPACE)(VK_UP)(VK_DOWN));
 
-        switch (status.shooting_mode)
+        switch (shooting_mode)
         {
         case normal:
         {
@@ -308,7 +301,7 @@ void one_player(void)
         {
             if (is_key_down('Z'))
             {
-                static_timer(status.quick_shooting_time_interval)
+                static_timer(quick_shooting_time_interval)
                 {
                     send_event_to_key(
                         (key_event_up_to_down, 'G')
@@ -349,8 +342,8 @@ int main(void)
     } mode[] =
     {
         {
-            .name = "3 players",
-            .func = three_player3
+            .name = "4 players",
+            .func = four_players
         }, {
             .name = "1 player",
             .func = one_player
@@ -361,13 +354,13 @@ int main(void)
 
 loop:
     puts(
-        " +--------[ select keybmap mode]--------+ \n"
-        " | ctrl      | description              | \n"
-        " +-----------+--------------------------+ \n"
-        " | UP        | switch keybmod mode      | \n"
-        " | DOWN      | switch keybmod mode      | \n"
-        " | Z         | select this mode         | \n"
-        " | SPACE + X | exit                     | \n"
+        " +--------[ select keybmap mode]--------+\n"
+        " | key       | description              |\n"
+        " +-----------+--------------------------+\n"
+        " | UP        | switch keybmod mode      |\n"
+        " | DOWN      | switch keybmod mode      |\n"
+        " | Z         | select this mode         |\n"
+        " | SPACE + X | exit                     |\n"
         " +-----------+--------------------------+"
     );
     printf("mode = %s\n", mode[idx].name);
