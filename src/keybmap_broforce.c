@@ -12,6 +12,24 @@ int key_status[256] = { 0 };
 #define static_timer(time_interval)                     static time_t strcat2(timer, __LINE__) = 0; \
                                                         if ((strcat2(timer, __LINE__) + time_interval <= clock()) ? (strcat2(timer, __LINE__) = clock()) : 0)
 
+/* util enum val with str name */
+#define enum_str_0(e)                                   #e,
+#define enum_str_1(e)                                   enum_str_0(e) enum_str_2
+#define enum_str_1_end
+#define enum_str_2(e)                                   enum_str_0(e) enum_str_1
+#define enum_str_2_end
+#define enum_str(enums)                                 strcat2(enum_str_1 enums, _end)
+
+#define enum_val_0(e)                                   e,
+#define enum_val_1(e)                                   enum_val_0(e) enum_val_2
+#define enum_val_1_end
+#define enum_val_2(e)                                   enum_val_0(e) enum_val_1
+#define enum_val_2_end
+#define enum_val(enums)                                 strcat2(enum_val_1 enums, _end)
+
+#define enum_to_str(enum_name, e)                       enum_name##_str[e]
+#define def_enum_with_str_name(enum_name, enums)        typedef enum { enum_val(enums) } enum_name; const char *enum_name##_str[] = { enum_str(enums) };
+
 /* update_key_status */
 #define update_key_status_0(key)                        key_status[key] = (((key_status[key] << 1) | !!GetAsyncKeyState(key))) & 0b011;
 #define update_key_status_1(key)                        update_key_status_0(key) update_key_status_2
@@ -63,6 +81,14 @@ int key_status[256] = { 0 };
    Introduction to macro functions */
 void main(void)
 {
+    /* 声明枚举和对应的字符串列表（要求枚举只能从零开始自增，不能自定义枚举的值）
+       Declare enums and corresponding string array (cannot customize the values of enums) */
+    def_enum_with_str_name(number, (zero)(one)(two)(three));
+    printf("%s = %d\n", enum_to_str(number, zero), zero);
+    printf("%s = %d\n", enum_to_str(number, one), one);
+    printf("%s = %d\n", enum_to_str(number, two), two);
+    printf("%s = %d\n", enum_to_str(number, three), three);
+
     for (;;)
     {
         /* 监听A、B、C、D、E键的状态
@@ -121,71 +147,6 @@ void main(void)
 
 /* keybmap_broforce */
 
-static enum { normal, quick } shooting_mode = quick;
-static time_t quick_shooting_time_interval = 40;
-
-#define print_shooting_mode(shooting_mode)              \
-        puts("shooting_mode = " #shooting_mode)         \
-
-#define print_status()                                  \
-{                                                       \
-    switch (shooting_mode)                              \
-    {                                                   \
-    case normal: {                                      \
-        print_shooting_mode(normal);                    \
-        break;                                          \
-    }                                                   \
-    case quick: {                                       \
-        print_shooting_mode(quick);                     \
-        break;                                          \
-    }                                                   \
-    }                                                   \
-    printf("quick_shooting_time_interval = %lld\n",     \
-        quick_shooting_time_interval                    \
-    );                                                  \
-}                                                       \
-
-#define change_shooting_mode()                          \
-{                                                       \
-    switch (shooting_mode)                              \
-    {                                                   \
-    case normal: {                                      \
-        shooting_mode = quick;                          \
-        print_shooting_mode(quick);                     \
-        break;                                          \
-    }                                                   \
-    case quick: {                                       \
-        shooting_mode = normal;                         \
-        print_shooting_mode(normal);                    \
-        break;                                          \
-    }                                                   \
-    }                                                   \
-}                                                       \
-
-#define add_quick_shooting_time_interval()              \
-{                                                       \
-    quick_shooting_time_interval += 2;                  \
-                                                        \
-    if (quick_shooting_time_interval >= 70) {           \
-        quick_shooting_time_interval = 30;              \
-    }                                                   \
-    printf("quick_shooting_time_interval = %lld\n",     \
-        quick_shooting_time_interval                    \
-    );                                                  \
-}                                                       \
-
-#define sub_quick_shooting_time_interval()              \
-{                                                       \
-    quick_shooting_time_interval -= 2;                  \
-                                                        \
-    if (quick_shooting_time_interval <= 30) {           \
-        quick_shooting_time_interval = 70;              \
-    }                                                   \
-    printf("quick_shooting_time_interval = %lld\n",     \
-        quick_shooting_time_interval                    \
-    );                                                  \
-}                                                       \
-
 void four_players(void)
 {
     puts(
@@ -205,10 +166,20 @@ void four_players(void)
         " |           |       - - --+---------+---------+---------+---------+\n"
         " | SPACE     | change shooting_mode                                |\n"
         " | UP        | change quick_shooting_time_interval                 |\n"
+        " | DOWN      | change quick_shooting_time_interval                 |\n"
         " | SPACE + X | select keybmap mode                                 |\n"
         " +-----------+-----------------------------------------------------+"
     );
-    print_status();
+
+    def_enum_with_str_name(enum_shooting_mode, (normal)(quick));
+    static enum_shooting_mode shooting_mode = normal;
+
+    static time_t quick_shooting_time_interval = 30;
+
+    printf("shooting_mode = %s\n", enum_to_str(enum_shooting_mode, normal));
+    printf("quick_shooting_time_interval = %lld\n",
+        quick_shooting_time_interval
+    );
 
     for (;;)
     {
@@ -245,14 +216,29 @@ void four_players(void)
         }
         }
 
-        if (is_key_up_to_down(VK_SPACE)) {
-            change_shooting_mode();
+        if (is_key_up_to_down(VK_SPACE))
+        {
+            shooting_mode = (normal == shooting_mode) ? quick : normal;
+            printf("shooting_mode = %s\n", enum_to_str(enum_shooting_mode, shooting_mode));
         }
-        else if (is_key_up_to_down(VK_UP)) {
-            add_quick_shooting_time_interval();
+        else if (is_key_up_to_down(VK_UP))
+        {
+            if ((quick_shooting_time_interval += 2) > 70) {
+                quick_shooting_time_interval = 30;
+            }
+            printf("quick_shooting_time_interval = %lld\n",
+                quick_shooting_time_interval
+            );
         }
-        else if (is_key_up_to_down(VK_DOWN)) {
-            sub_quick_shooting_time_interval();
+        else if (is_key_up_to_down(VK_DOWN))
+        {
+            if ((quick_shooting_time_interval -= 2) < 30) {
+                quick_shooting_time_interval = 70;
+            }
+
+            printf("quick_shooting_time_interval = %lld\n",
+                quick_shooting_time_interval
+            );
         }
 
         if (is_key_down(VK_SPACE) && is_key_up_to_down('X')) {
@@ -284,7 +270,16 @@ void one_player(void)
         " | SPACE + X | select keybmap mode                 |\n"
         " +-----------+-------------------------------------+"
     );
-    print_status();
+
+    def_enum_with_str_name(enum_shooting_mode, (normal)(quick));
+    enum_shooting_mode shooting_mode = normal;
+
+    time_t quick_shooting_time_interval = 30;
+
+    printf("shooting_mode = %s\n", enum_to_str(enum_shooting_mode, normal));
+    printf("quick_shooting_time_interval = %lld\n",
+        quick_shooting_time_interval
+    );
 
     for (;;)
     {
@@ -313,15 +308,29 @@ void one_player(void)
         }
         }
 
-        if (is_key_up_to_down(VK_SPACE)) {
-            change_shooting_mode();
+        if (is_key_up_to_down(VK_SPACE))
+        {
+            shooting_mode = (normal == shooting_mode) ? quick : normal;
+            printf("shooting_mode = %s\n", enum_to_str(enum_shooting_mode, shooting_mode));
         }
+        else if (is_key_up_to_down(VK_UP))
+        {
+            if ((quick_shooting_time_interval += 2) > 70) {
+                quick_shooting_time_interval = 30;
+            }
+            printf("quick_shooting_time_interval = %lld\n",
+                quick_shooting_time_interval
+            );
+        }
+        else if (is_key_up_to_down(VK_DOWN))
+        {
+            if ((quick_shooting_time_interval -= 2) < 30) {
+                quick_shooting_time_interval = 70;
+            }
 
-        if (is_key_up_to_down(VK_UP)) {
-            add_quick_shooting_time_interval();
-        }
-        else if (is_key_up_to_down(VK_DOWN)) {
-            sub_quick_shooting_time_interval();
+            printf("quick_shooting_time_interval = %lld\n",
+                quick_shooting_time_interval
+            );
         }
 
         if (is_key_down(VK_SPACE) && is_key_up_to_down('X')) {
@@ -357,8 +366,8 @@ loop:
         " +--------[ select keybmap mode]--------+\n"
         " | key       | description              |\n"
         " +-----------+--------------------------+\n"
-        " | UP        | switch keybmod mode      |\n"
-        " | DOWN      | switch keybmod mode      |\n"
+        " | UP        | switch keybmap mode      |\n"
+        " | DOWN      | switch keybmap mode      |\n"
         " | Z         | select this mode         |\n"
         " | SPACE + X | exit                     |\n"
         " +-----------+--------------------------+"
